@@ -1,11 +1,9 @@
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.Random;
 import java.util.Stack;
 
 /**
- * 通过栈实现四叉树编码的二进制实现，将四叉树编码存入文件中（准备作为文件名活HBase的key值）
+ * 通过栈实现四叉树编码的二进制实现，将四叉树编码存入文件中（准备作为文件名和HBase的key值）
  *
  * Created by fly on 15-7-22.
  */
@@ -44,7 +42,7 @@ public class HashMap {
         while(!nodeStack.empty()){
             Node node = nodeStack.pop();
             if(node.count == layernum*2){   //得到结果为2^(count-2)条
-                //如果需要String形式显示
+                //如果需要二进制形式显示
 //                String str = int.toBinaryString(node.key);
 //                int len = str.length();
 //                if(len < 31){
@@ -88,5 +86,65 @@ public class HashMap {
         }
     }
 
+    static void generateFile() throws IOException {
+        int count = 0;///
+        DataInputStream dataInputStream = new DataInputStream
+                (new FileInputStream(new File("/home/fly/桌面/hadoopPrj/hashMap_9")));
 
+        int tm;
+        while (dataInputStream.available() != 0) {
+            tm = dataInputStream.readInt();
+            String str = Integer.toBinaryString(tm);
+            int len = str.length();
+            if (len < 31) {
+                for (int i = 0; i < 31 - len; i++)
+                    str = "0" + str;
+            }
+            //            System.out.println(str);
+            writeDataTest("/home/fly/桌面/hadoopPrj/data_1G/" + str, 9);
+            count++;
+            if (count % 1000 == 0)
+                System.out.println(count);
+        }
+    }
+
+    static void writeDataTest(String filePath, int num) throws IOException {
+        DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(new File(filePath)));
+
+        byte[] bytes = new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//        SimpleDateFormat time = new SimpleDateFormat("yyyy MM dd HH mm ss SS");
+//        System.out.println(time.format(new Date()));
+        Random random = new Random();
+        for (int i = 0; i < num; i++) {
+            string2FixByte(dataOutputStream, "num" + i, bytes);
+            dataOutputStream.writeDouble(random.nextDouble());
+            dataOutputStream.writeDouble(random.nextDouble());
+            dataOutputStream.writeDouble(random.nextDouble());
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+            string2FixByte(dataOutputStream, "attr", bytes);
+        }
+//        System.out.println(time.format(new Date()));
+    }
+    /**
+     * 将输入的str按照bytes的长度输出到dataOutputStream中，不够的在前面补0
+     *
+     * @param dataOutputStream  输出流
+     * @param str   输入的str
+     * @param bytes 全部为0的定长数组
+     * @throws IOException
+     */
+    static void string2FixByte(DataOutputStream dataOutputStream, String str, byte[] bytes) throws IOException {
+        if (str.length() < bytes.length) {
+            dataOutputStream.write(str.getBytes(), 0, str.length());
+            dataOutputStream.write(bytes, 0, 10 - str.length());
+        }
+    }
 }

@@ -1,6 +1,9 @@
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.*;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
@@ -13,25 +16,66 @@ import java.util.Stack;
 public class temp {
     public static void main(String[] args) throws IOException {
 
-        int count = 0;///
-        DataInputStream dataInputStream = new DataInputStream
-                (new FileInputStream(new File("/home/fly/桌面/hadoopPrj/hashMap_9")));
+        Configuration conf;
+        FSDataOutputStream out;
+        FSDataInputStream in;
+        try {
+            conf = new Configuration();
 
-        int tm;
-        while (dataInputStream.available() != 0) {
-            tm = dataInputStream.readInt();
-            String str = Integer.toBinaryString(tm);
-            int len = str.length();
-            if (len < 31) {
-                for (int i = 0; i < 31 - len; i++)
-                    str = "0" + str;
+            FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
+            FileSystem local = FileSystem.getLocal(conf);
+            Path inputDir = new Path("/home/fly/桌面/hadoopPrj/data_1G");////////////////////TODO
+            Path hdfsFile = new Path("/102414/");
+            //		hdfs.mkdirs(hdfsFile);
+
+            //得到路径下的文件与目录 		如果存在目录会抛出异常
+            FileStatus[] inputFiles = local.listStatus(inputDir);
+
+            System.out.println("list Over");
+            for (int i = 0; i < inputFiles.length; i++) {
+
+                System.out.println(inputFiles[i].getPath().getName());
+                in = local.open(inputFiles[i].getPath());
+                out = hdfs.create(new Path(hdfsFile.toString() + "/" + inputFiles[i].getPath().getName()));
+
+                byte buffer[] = new byte[256];
+                int bytesRead = 0;
+                while ((bytesRead = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, bytesRead);
+                }
+
+                out.close();
+                in.close();
+//                File file = new File(inputFiles[i].getPath().toString());
+//                file.delete();
+
             }
-            //            System.out.println(str);
-            writeDataTest("/home/fly/桌面/hadoopPrj/data_1G/" + str, 9);
-            count++;
-            if (count % 1000 == 0)
-                System.out.println(count);
+            System.out.println("end");
+        }catch (Exception ee){
+            ee.printStackTrace();
         }
+        finally {
+
+        }
+//        int count = 0;///
+//        DataInputStream dataInputStream = new DataInputStream
+//                (new FileInputStream(new File("/home/fly/桌面/hadoopPrj/hashMap_9")));
+//
+//        int tm;
+//        while (dataInputStream.available() != 0) {
+//            tm = dataInputStream.readInt();
+//            String str = Integer.toBinaryString(tm);
+//            int len = str.length();
+//            if (len < 31) {
+//                for (int i = 0; i < 31 - len; i++)
+//                    str = "0" + str;
+//            }
+//            //            System.out.println(str);
+//            writeDataTest("/home/fly/桌面/hadoopPrj/data_1G/" + str, 9);
+//            count++;
+//            if (count % 1000 == 0)
+//                System.out.println(count);
+//        }
 
 
         //hashMap("/home/fly/桌面/hadoopPrj/hashMap_9",9);  //1048576条索引

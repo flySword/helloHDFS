@@ -24,7 +24,7 @@ import java.util.Scanner;
  *
  * Created by fly on 15-7-13.
  */
-public class BinaryFileRead extends Configured implements Tool {
+public class BinaryFileRead_MapReduce extends Configured implements Tool {
 
 
     public static class MapperClass extends Mapper<Text, Text, Text, IntWritable> {
@@ -57,7 +57,7 @@ public class BinaryFileRead extends Configured implements Tool {
     }
 
     public	static	void	main(String[]	args)	throws	Exception	{
-        int	exitCode = ToolRunner.run(new BinaryFileRead(), args);
+        int	exitCode = ToolRunner.run(new BinaryFileRead_MapReduce(), args);
         System.exit(exitCode);
     }
 }

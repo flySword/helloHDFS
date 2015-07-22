@@ -150,17 +150,17 @@ public class BinaryFileRW_Test {
     }
 
     /**
-     * 将输入的str按照bytes的长度输出到dataOutputStream中，不够的补0
+     * 将输入的str按照bytes的长度输出到dataOutputStream中，不够的在前面补0
      *
-     * @param dataOutputStream
-     * @param str
-     * @param bytes
+     * @param dataOutputStream  输出流
+     * @param str   输入的str
+     * @param bytes 全部为0的定长数组
      * @throws IOException
      */
     static void string2FixByte(DataOutputStream dataOutputStream, String str, byte[] bytes) throws IOException {
         if (str.length() < bytes.length) {
             dataOutputStream.write(str.getBytes(), 0, str.length());
-            dataOutputStream.write(bytes, 0, 10 - str.length());
+            dataOutputStream.write(bytes, 0, bytes.length - str.length());
         }
     }
 
