@@ -2,10 +2,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.*;
-import java.awt.event.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.URI;
 
@@ -13,6 +15,7 @@ import java.net.URI;
  * 通过GUI实现了文件的上传、查看和删除功能
  */
 public class testDlg extends JDialog {
+    ImageIcon imageIcon = new ImageIcon("panda.ico");
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -21,23 +24,17 @@ public class testDlg extends JDialog {
     private JTree tree1;
     private JButton updateButton;
     private JCheckBox checkBox1;
-
     public testDlg() {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
+        this.setIconImage(imageIcon.getImage());
+        this.setAlwaysOnTop(true);
+        this.setName("HDFS Manager");
 
-        buttonOK.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onOK();
-            }
-        });
+        buttonOK.addActionListener(e -> onOK());
 
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        });
+        buttonCancel.addActionListener(e -> onCancel());
 
 // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -48,70 +45,51 @@ public class testDlg extends JDialog {
         });
 
 // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         updateButton.addActionListener(e -> updateTree());
 
 
 
         updateTree();
-        tree1.addTreeSelectionListener(new TreeSelectionListener() {
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {
+        tree1.addTreeSelectionListener(e -> {
 
-                TreePath path = e.getPath();    //返回的是一个TreeNode型数组
-                Object[] path1 = path.getPath();
-                String filePath = "";
-                for(int i=0; i<path1.length; i++){
-                    if(i == 0){
-                        filePath += "/";
-                    }
-                    else{
-                        filePath += "/"+path1[i];
-                    }
-                }
-                filePath = "hdfs://localhost:9000"+filePath;
-
-                if(checkBox1.isSelected()) {
-                    Configuration conf = new Configuration();
-                    try {
-                        FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
-                        Path delef = new Path(filePath);
-                        boolean isDeleted = hdfs.delete(delef, true);
-                        System.out.println("Delete?\n" + isDeleted);
-                    } catch (IOException ee) {
-                        ee.printStackTrace();
-                    }
+            TreePath path = e.getPath();    //返回的是一个TreeNode型数组
+            Object[] path1 = path.getPath();
+            String filePath = "";
+            for (int i = 0; i < path1.length; i++) {
+                if (i == 0) {
+                    filePath += "/";
                 }
                 else{
-                    System.out.println(filePath);
+                    filePath += "/" + path1[i];
                 }
-
-
-
-//                File file = new File(e.getPath().toString());
-//                file.delete();
-
             }
+            filePath = "hdfs://localhost:9000" + filePath;
+
+            if (checkBox1.isSelected()) {
+                Configuration conf = new Configuration();
+                try {
+                    FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
+                    Path delef = new Path(filePath);
+                    boolean isDeleted = hdfs.delete(delef, true);
+                    System.out.println("Delete?\n" + isDeleted);
+                } catch (IOException ee) {
+                    ee.printStackTrace();
+                }
+            } else {
+                System.out.println(filePath);
+            }
+
         });
     }
 
-//    private DefaultMutableTreeNode deleteHDFS_file(FileSystem hdfs,String filePath) throws IOException {
-//        if(hdfs.isDirectory(new Path(filePath))){
-//            hdfs.delete(new Path(filePath),true);
-////            FileStatus[] statuses = hdfs.listStatus(new Path(filePath));
-////            for(FileStatus status : statuses){
-////                deleteHDFS_file(FileSystem hdfs, status.getPath().toString());
-////            }
-//        }
-//        else
-//            hdfs.delete(new Path(filePath),)
-//
-//    }
+    public static void main(String[] args) {
+        testDlg dialog = new testDlg();
+        dialog.pack();
+        dialog.setVisible(true);
+        System.exit(0);
+    }
 
     private void onOK() {
         String localFile = textField1.getText();
@@ -140,8 +118,8 @@ public class testDlg extends JDialog {
             out = hdfs.create(hdfsFile);
 
             byte buffer[] = new byte[256];
-            int bytesRead = 0;
-            while ((bytesRead = in.read(buffer)) > 0) {
+            int bytesRead;
+            while (0 < (bytesRead = in.read(buffer))) {
                 out.write(buffer, 0, bytesRead);
             }
 
@@ -153,8 +131,6 @@ public class testDlg extends JDialog {
             System.out.println(e.toString());
         }
     }
-
-
 
     private void updateTree() {
 
@@ -171,6 +147,7 @@ public class testDlg extends JDialog {
             e.printStackTrace();
         }
     }
+
     private DefaultMutableTreeNode getFile2node(FileSystem hdfs,FileStatus[] status,String name) throws IOException {
         DefaultMutableTreeNode top = new DefaultMutableTreeNode(name);
         for(FileStatus status1 : status){
@@ -184,14 +161,5 @@ public class testDlg extends JDialog {
             top.add(node);
         }
         return top;
-    }
-
-
-
-    public static void main(String[] args) {
-        testDlg dialog = new testDlg();
-        dialog.pack();
-        dialog.setVisible(true);
-        System.exit(0);
     }
 }

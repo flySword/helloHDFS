@@ -4,6 +4,7 @@ import java.util.Stack;
 
 /**
  * 通过栈实现四叉树编码的二进制实现，将四叉树编码存入文件中（准备作为文件名和HBase的key值）
+ * 从四叉树文件hashMap中读取编码，并以一定大小生成文件名为编码名的文件
  *
  * Created by fly on 15-7-22.
  */
@@ -11,6 +12,8 @@ public class HashMap {
 
 
     public static void main(String[] args) throws IOException {
+        hashMap("/home/fly/桌面/hadoopPrj/hashMap_5", 5);  //生成小量文件通过MapReduce上传或是直接上传对比
+        generateFile("/home/fly/桌面/hadoopPrj/hashMap_5", "/home/fly/桌面/hadoopPrj/data_4096/");
 
     }
 
@@ -19,10 +22,10 @@ public class HashMap {
      * 由于int的第一位为符号位可能影响后面结果，第一位跳过
      * 结果以二进制的方式输出到文件
      * @param filePath 文件输入路径
-     * @param layernum 一共生成的层数，每层四个数据，结果为2^(layernum-1)个
+     * @param layerNum 一共生成的层数，每层四个数据，结果为2^(layerNum-1)个
      * @throws IOException
      */
-    static void hashMap(String filePath,int layernum) throws IOException{
+    static void hashMap(String filePath, int layerNum) throws IOException {
         DataOutputStream dataOutputStream = new DataOutputStream(
                 new BufferedOutputStream(new FileOutputStream(filePath)));
 
@@ -41,7 +44,7 @@ public class HashMap {
         nodeStack.push(new Node(key4, count1));
         while(!nodeStack.empty()){
             Node node = nodeStack.pop();
-            if(node.count == layernum*2){   //得到结果为2^(count-2)条
+            if (node.count == layerNum * 2) {   //得到结果为2^(count-2)条
                 //如果需要二进制形式显示
 //                String str = int.toBinaryString(node.key);
 //                int len = str.length();
@@ -72,24 +75,16 @@ public class HashMap {
         dataOutputStream.close();
     }
 
-    //hashMap函数中用到的类
-    static class Node{
-        int key;
-        int count;      //count of layer 层数
-        Node(){
-            key = 0;
-            count = 0;
-        }
-        Node(int key1, int count1){
-            key = key1;
-            count = count1;
-        }
-    }
-
-    static void generateFile() throws IOException {
-        int count = 0;///
+    /**
+     * 读取已经生成的四叉树编码文件，向每个文件中写入writeNum=9条数的数据，每个文件以编码命名
+     *
+     * @throws IOException
+     */
+    static void generateFile(String hashMapFile, String outputPath) throws IOException {
+        int writeNum = 9;
+        int count = 0;
         DataInputStream dataInputStream = new DataInputStream
-                (new FileInputStream(new File("/home/fly/桌面/hadoopPrj/hashMap_9")));
+                (new FileInputStream(new File(hashMapFile)));
 
         int tm;
         while (dataInputStream.available() != 0) {
@@ -101,11 +96,12 @@ public class HashMap {
                     str = "0" + str;
             }
             //            System.out.println(str);
-            writeDataTest("/home/fly/桌面/hadoopPrj/data_1G/" + str, 9);
+            writeDataTest(outputPath + str, writeNum);
             count++;
             if (count % 1000 == 0)
                 System.out.println(count);
         }
+        dataInputStream.close();
     }
 
     static void writeDataTest(String filePath, int num) throws IOException {
@@ -133,6 +129,7 @@ public class HashMap {
         }
 //        System.out.println(time.format(new Date()));
     }
+
     /**
      * 将输入的str按照bytes的长度输出到dataOutputStream中，不够的在前面补0
      *
@@ -145,6 +142,22 @@ public class HashMap {
         if (str.length() < bytes.length) {
             dataOutputStream.write(str.getBytes(), 0, str.length());
             dataOutputStream.write(bytes, 0, 10 - str.length());
+        }
+    }
+
+    //hashMap函数中用到的类
+    static class Node {
+        int key;
+        int count;      //count of layer 层数
+
+        Node() {
+            key = 0;
+            count = 0;
+        }
+
+        Node(int key1, int count1) {
+            key = key1;
+            count = count1;
         }
     }
 }

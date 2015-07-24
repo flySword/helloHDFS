@@ -16,7 +16,7 @@ public class Data2cloud {
 
 			FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"),conf);
 			FileSystem local = FileSystem.getLocal(conf);
-			Path inputDir = new Path("/home/fly/桌面/hadoopPrj/data");////////////////////TODO
+			Path inputDir = new Path("/home/fly/桌面/hadoopPrj/data");
 			Path hdfsFile = new Path("/testDataProcess/");
 	//		hdfs.mkdirs(hdfsFile);
 
