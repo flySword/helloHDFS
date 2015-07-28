@@ -15,7 +15,6 @@ import java.util.Date;
  * 文件夹中批量文件的复制与移动、重命名
  * <p>
  * 通过rename函数移动文件，速度比copy函数复制后删除快得多
- * TODO 将HDFS中大量文件挪到一个文件夹，然后测试效率
  * HDFS中移动文件使用rename函数 ~\(≧▽≦)/~
  */
 public class RenameMoveCopy {

@@ -1,8 +1,6 @@
-/**
+package mapreduce; /**
  * Created by fly on 15-7-9.
  */
-import java.io.IOException;
-import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -13,10 +11,37 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.util.GenericOptionsParser;
+
+import java.io.IOException;
+import java.util.StringTokenizer;
 
 
 public class InvertedIndex {
+
+    public static void main(String[] args) throws Exception {
+
+        Configuration conf = new Configuration();
+
+        Job job = new Job(conf, "mapreduce.InvertedIndex");
+        job.setJarByClass(InvertedIndex.class);
+
+        job.setMapperClass(InvertedIndexMapper.class);
+
+        job.setMapOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        job.setCombinerClass(InvertedIndexCombiner.class);
+        job.setReducerClass(InvertedIndexReduce.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        FileInputFormat.addInputPath(job, new Path("hdfs://localhost:9000/input"));
+        FileOutputFormat.setOutputPath(job, new Path("hdfs://localhost:9000/output"));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+    }
 
     public static class InvertedIndexMapper extends Mapper<Object, Text, Text, Text>{
         private Text keyInfo=new Text();
@@ -64,7 +89,6 @@ public class InvertedIndex {
         }
     }
 
-
     //key为单词    values为 <文件名：出现次数>
     public static class InvertedIndexReduce extends Reducer<Text, Text, Text, Text> {
         private Text result=new Text();
@@ -77,31 +101,6 @@ public class InvertedIndex {
             result.set(fileList);
             context.write(key, result);
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        Configuration conf=new Configuration();
-
-        Job job=new Job(conf,"InvertedIndex");
-        job.setJarByClass(InvertedIndex.class);
-
-        job.setMapperClass(InvertedIndexMapper.class);
-
-        job.setMapOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-
-        job.setCombinerClass(InvertedIndexCombiner.class);
-        job.setReducerClass(InvertedIndexReduce.class);
-
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-
-        FileInputFormat.addInputPath(job, new Path("hdfs://localhost:9000/input"));
-        FileOutputFormat.setOutputPath(job, new Path("hdfs://localhost:9000/output"));
-
-        System.exit(job.waitForCompletion(true)?0:1);
-
     }
 
 }

@@ -1,15 +1,15 @@
 package hdfsBasicOper;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Progressable;
 
 import java.io.*;
 import java.net.URI;
 
-public class UploadToHDFS {
+public class Data2cloud_recommend {
 
     public static void main(String[] args) throws IOException {
 
@@ -61,4 +61,24 @@ public class UploadToHDFS {
 //	        }
     }
 
+    static void data2cloud(String src, String des) {
+        Configuration conf = new Configuration();
+        try {
+            FileSystem fs = FileSystem.get(URI.create(des), conf);
+            FileSystem local = FileSystem.getLocal(conf);
+            FileStatus[] inputFiles = local.listStatus(new Path(src));
+
+            for (FileStatus fileStatus : inputFiles) {
+                FSDataOutputStream out = fs.create(new Path(des + "/" + fileStatus.getPath().getName()));
+                FSDataInputStream in = local.open(fileStatus.getPath());
+                IOUtils.copyBytes(in, out, 1024, true);
+                out.close();
+                in.close();
+            }
+            fs.close();
+            local.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

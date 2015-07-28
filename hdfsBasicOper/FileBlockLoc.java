@@ -10,12 +10,12 @@ import java.io.IOException;
 import java.net.URI;
 
 
-public class FileLoc {
+public class FileBlockLoc {
 
     public static void main(String[] args) throws IOException {
         Configuration conf = new Configuration();
         FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
-        Path fpath = new Path("/input/core-site.xml");
+        Path fpath = new Path("/bigfile2");
 
         FileStatus filestatus = hdfs.getFileStatus(fpath);
         BlockLocation[] blkLocations = hdfs.getFileBlockLocations(filestatus, 0, filestatus.getLen());

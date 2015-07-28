@@ -1,3 +1,5 @@
+package hdfsBasicOper;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -24,7 +26,7 @@ import java.util.Date;
  * 当一个文件夹中包含文件117963，文件间隔100下载100个文件，总用时5s。
  * 当间隔为800时，总用时6s左右
  * <p>
- * TODO 向一个文件夹中上传大量文件测试下载速度是否增大
+ *
  * Created by fly on 15-7-23.
  */
 public class LoadFromHDFS {

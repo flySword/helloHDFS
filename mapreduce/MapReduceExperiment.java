@@ -1,4 +1,5 @@
-import com.sun.xml.bind.annotation.OverrideAnnotationOf;
+package mapreduce;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -9,7 +10,6 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-import javax.annotation.concurrent.Immutable;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -18,6 +18,26 @@ import java.util.StringTokenizer;
  */
 public class MapReduceExperiment {
 
+
+    public static void main(String[] args) throws Exception {
+        Configuration conf = new Configuration();
+
+        @SuppressWarnings("deprecation")
+        Job job = new Job(conf, "word count");
+        job.setJarByClass(MapReduceExperiment.class);
+        job.setMapperClass(MapperClass.class);
+        job.setCombinerClass(CombineClass.class);    //combine过程与reduce过程的执行函数相同
+        //    job.setReducerClass(ReducerClass.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path("hdfs://localhost:9000/input/"));
+        FileOutputFormat.setOutputPath(job, new Path("hdfs://localhost:9000/output4"));
+
+        System.out.println("over");
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+    }
 
     public static class MapperClass extends Mapper<Object, Text, Text, IntWritable> {
 
@@ -44,26 +64,5 @@ public class MapReduceExperiment {
             result.set(sum);
             context.write(key, result);		//结果存入最后的output文件中
         }
-    }
-
-
-    public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-
-        @SuppressWarnings("deprecation")
-        Job job = new Job(conf, "word count");
-        job.setJarByClass(MapReduceExperiment.class);
-        job.setMapperClass(MapperClass.class);
-        job.setCombinerClass(CombineClass.class);	//combine过程与reduce过程的执行函数相同
-    //    job.setReducerClass(ReducerClass.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
-
-        FileInputFormat.addInputPath(job, new Path("hdfs://localhost:9000/input/"));
-        FileOutputFormat.setOutputPath(job, new Path("hdfs://localhost:9000/output4"));
-
-        System.out.println("over");
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
-
     }
 }

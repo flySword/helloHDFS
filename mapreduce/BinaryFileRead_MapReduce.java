@@ -1,3 +1,5 @@
+package mapreduce;
+
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
@@ -27,13 +29,9 @@ import java.util.Scanner;
 public class BinaryFileRead_MapReduce extends Configured implements Tool {
 
 
-    public static class MapperClass extends Mapper<Text, Text, Text, IntWritable> {
-
-        public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-            System.out.println(value);
-   //         System.out.println(key);
-            context.write(value,new IntWritable(1));
-        }
+    public static void main(String[] args) throws Exception {
+        int exitCode = ToolRunner.run(new BinaryFileRead_MapReduce(), args);
+        System.exit(exitCode);
     }
 
     @Override
@@ -56,9 +54,13 @@ public class BinaryFileRead_MapReduce extends Configured implements Tool {
         return	job.waitForCompletion(true)	?	0	:	1;
     }
 
-    public	static	void	main(String[]	args)	throws	Exception	{
-        int	exitCode = ToolRunner.run(new BinaryFileRead_MapReduce(), args);
-        System.exit(exitCode);
+    public static class MapperClass extends Mapper<Text, Text, Text, IntWritable> {
+
+        public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+            System.out.println(value);
+            //         System.out.println(key);
+            context.write(value, new IntWritable(1));
+        }
     }
 }
 
@@ -69,7 +71,7 @@ class MyRecordReader extends RecordReader<Text, Text>{
 
     DoubleWritable x;
 //    ObjectInputStream objectInputStream;
-//    TestDataStruct testDataStruct;
+//    mapreduce.TestDataStruct testDataStruct;
     FSDataInputStream dataInputStream;
 
     @Override
@@ -115,7 +117,7 @@ class MyRecordReader extends RecordReader<Text, Text>{
 
         //读取通过结构体存储的二进制文件   无法识别hdfs路径！
 //        try {
-//            testDataStruct = (TestDataStruct) objectInputStream.readObject();
+//            testDataStruct = (mapreduce.TestDataStruct) objectInputStream.readObject();
 //            x.set(testDataStruct.x);
 //            System.out.println(testDataStruct.name);
 //            System.out.println(testDataStruct.z);
@@ -192,7 +194,7 @@ class TestDataStruct implements Serializable {
         Scanner in = new Scanner(new File("/home/fly/桌面/hadoopPrj/data/testData.csv"));
         String str;
         String strs[];
-        //    TestDataStruct testDataStruct;
+        //    mapreduce.TestDataStruct testDataStruct;
 
         while (in.hasNextLine()) {
             str = in.nextLine();
