@@ -41,6 +41,11 @@ public class MapReduceExperiment {
 
     public static class MapperClass extends Mapper<Object, Text, Text, IntWritable> {
 
+        @Override
+        protected void setup(Mapper.Context context) throws IOException, InterruptedException {
+        }
+
+        @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             StringTokenizer itr = new StringTokenizer(value.toString());		//将每一行分解为多个单词
             Text word = new Text();

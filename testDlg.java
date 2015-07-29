@@ -16,6 +16,9 @@ import java.net.URI;
  */
 public class testDlg extends JDialog {
     ImageIcon imageIcon = new ImageIcon("panda.ico");
+    Configuration conf;
+    FileSystem hdfs;
+    FileSystem local;
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -24,7 +27,8 @@ public class testDlg extends JDialog {
     private JTree tree1;
     private JButton updateButton;
     private JCheckBox checkBox1;
-    public testDlg() {
+
+    public testDlg() throws IOException {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
@@ -33,9 +37,7 @@ public class testDlg extends JDialog {
         this.setName("HDFS Manager");
 
         buttonOK.addActionListener(e -> onOK());
-
         buttonCancel.addActionListener(e -> onCancel());
-
 // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -46,10 +48,11 @@ public class testDlg extends JDialog {
 
 // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-
         updateButton.addActionListener(e -> updateTree());
 
-
+        conf = new Configuration();
+        hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
+        local = FileSystem.getLocal(conf);
 
         updateTree();
         tree1.addTreeSelectionListener(e -> {
@@ -68,9 +71,9 @@ public class testDlg extends JDialog {
             filePath = "hdfs://localhost:9000" + filePath;
 
             if (checkBox1.isSelected()) {
-                Configuration conf = new Configuration();
+                //      Configuration conf = new Configuration();
                 try {
-                    FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
+                    //         FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
                     Path delef = new Path(filePath);
                     boolean isDeleted = hdfs.delete(delef, true);
                     System.out.println("Delete?\n" + isDeleted);
@@ -84,7 +87,7 @@ public class testDlg extends JDialog {
         });
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         testDlg dialog = new testDlg();
         dialog.pack();
         dialog.setVisible(true);
@@ -95,7 +98,6 @@ public class testDlg extends JDialog {
         String localFile = textField1.getText();
         String HDFSFile = textField2.getText();
         uploadFile(localFile, HDFSFile);
-
   //      dispose();
     }
 
@@ -105,11 +107,11 @@ public class testDlg extends JDialog {
     }
 
     private void uploadFile(String localFile,String HDFS_File){
-        Configuration conf;
+        //   Configuration conf;
         try {
-            conf = new Configuration();
-            FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
-            FileSystem local = FileSystem.getLocal(conf);
+            //        conf = new Configuration();
+            //    FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
+
             Path inputDir = new Path(localFile);
             Path hdfsFile = new Path(HDFS_File);
 
@@ -122,7 +124,6 @@ public class testDlg extends JDialog {
             while (0 < (bytesRead = in.read(buffer))) {
                 out.write(buffer, 0, bytesRead);
             }
-
             out.close();
             in.close();
             System.out.println("end");
@@ -134,10 +135,10 @@ public class testDlg extends JDialog {
 
     private void updateTree() {
 
-        Configuration conf;
+//        Configuration conf;
         try {
-            conf = new Configuration();
-            FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
+//            conf = new Configuration();
+//            FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
             FileStatus[] status = hdfs.listStatus(new Path("/"));
             DefaultMutableTreeNode top = getFile2node(hdfs, status, "/");
             DefaultTreeModel treeModel = new DefaultTreeModel(top);

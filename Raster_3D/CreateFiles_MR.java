@@ -21,18 +21,21 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
+ * 首先根据行列数与高度将文件名存入文件，文件个数与nameNode一直，然后通过MapReduce读取文件，
+ * 通过MapReduce读
  * Created by fly on 15-7-27.
  */
 public class CreateFiles_MR extends Configured implements Tool {
 
-    static String CLOUD_DEST = "hdfs://localhost:9000/Reaste_3D";
+    static String CLOUD_DEST = "hdfs://localhost:9000/Reaste_3D_test";
     static Configuration conf = new Configuration();
 
 
     static FileSystem fs;
 
     public static void main(String[] args) {
-        generateFiles(2, 3, 2, "/home/fly/桌面/hadoopPrj/temp", "aaa", 3, "hdfs://localhost:9000/temp");
+        //调用前先清空localPath hdfsPath，未进行自动清空！！
+        generateFiles(1, 1, 1, "/home/fly/桌面/hadoopPrj/temp", "aaa", 1, "hdfs://localhost:9000/temp");
         int exitCode = 0;
         try {
             exitCode = ToolRunner.run(new CreateFiles_MR(), args);
@@ -43,6 +46,7 @@ public class CreateFiles_MR extends Configured implements Tool {
     }
 
     /**
+     * 调用前先清空localPath hdfsPath，未设置自动删除！！
      * 通过输入的行数、列数、高度在本地生成fileNum个文件，每个文件中包含一部分可能生成的文件名，然后上传到HDFS中
      * 由于hdfs中未提供文本文件输出流，因此采用本地上传的方式
      * 示例调用：generateFiles(10, 10, 4, "/home/fly/桌面/hadoopPrj/temp", "aaa", 3, "hdfs://localhost:9000/temp");
@@ -68,7 +72,7 @@ public class CreateFiles_MR extends Configured implements Tool {
                         writer.write(i + "-" + j + "-" + k + "\n");
                         if (count % (totalNum / fileNum) == 0) {   //将文件中所有条目分为fileNum份，放在fileNum个文件中（最后一个文件可能略大）
                             num++;
-                            if (num < 3) {
+                            if (num < fileNum) {
                                 writer.close();
                                 writer = new FileWriter(localPath + "/" + fileName + num);
                             }

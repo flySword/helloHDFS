@@ -14,10 +14,10 @@ public class Rename {
 
         Configuration conf = new Configuration();
         FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
-        Path frpaht = new Path("/core.xml"); // 旧的文件名
-        Path topath = new Path("/coreRename.xml"); // 新的文件名
+        Path frpath = new Path("hdfs://localhost:9000/Reaste_3D_test/0-0-0_bak"); // 旧的文件名
+        Path topath = new Path("hdfs://localhost:9000/Reaste_3D_test/0-0-0"); // 新的文件名
 
-        boolean isRename = hdfs.rename(frpaht, topath);
+        boolean isRename = hdfs.rename(frpath, topath);
 
         String result = isRename ? "成功" : "失败";
         System.out.println("文件重命名结果为：" + result);
