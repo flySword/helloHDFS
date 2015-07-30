@@ -10,6 +10,10 @@ import java.io.IOException;
 
 /**
  * 存储每个点的10个属性
+ * 每个点的属性使用byte[10]的数组表示
+ *
+ * 每个点占用了100个字节，有点大
+ *
  * Created by fly on 15-7-27.
  */
 public class AttrNode implements Writable {

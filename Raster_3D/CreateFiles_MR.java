@@ -13,6 +13,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -27,15 +29,27 @@ import java.util.Date;
  */
 public class CreateFiles_MR extends Configured implements Tool {
 
-    static String CLOUD_DEST = "hdfs://localhost:9000/Reaste_3D_test";
+    static String LOCAL_TEMP = "/home/fly/桌面/hadoopPrj/temp";   // TODO 本地临时地址
+    static String CLOUD_TEMP = "hdfs://192.168.59.128:9000/temp";    // TODO HDFS临时地址
+    static String CLOUD_DEST = "hdfs://192.168.59.128:9000/Reaste_3D_test";  // TODO HDFS生成文件地址
+    static String OUTPUT = "hdfs://192.168.59.128:9000/output";
+
+    static int nameNodeNum = 2;
+    static int row = 2;
+    static int col = 1;
+    static int height = 1;
     static Configuration conf = new Configuration();
-
-
     static FileSystem fs;
+    private static Logger logger = LoggerFactory.getLogger(CreateFiles_MR.class);
 
     public static void main(String[] args) {
+        conf.set("fs.default.name", "hdfs://192.168.59.128:9000");
+        conf.set("mapreduce.jobtracker.address", "192.168.59.128:9001");
+        conf.set("mapreduce.framework.name", "yarn");
+        conf.set("yarn.resourcemanager.hostname", "192.168.59.139");
         //调用前先清空localPath hdfsPath，未进行自动清空！！
-        generateFiles(1, 1, 1, "/home/fly/桌面/hadoopPrj/temp", "aaa", 1, "hdfs://localhost:9000/temp");
+        generateFiles(row, col, height, LOCAL_TEMP, "aaa", nameNodeNum, CLOUD_TEMP);
+        logger.info("lllllll  generateFiles() over");
         int exitCode = 0;
         try {
             exitCode = ToolRunner.run(new CreateFiles_MR(), args);
@@ -64,12 +78,18 @@ public class CreateFiles_MR extends Configured implements Tool {
         int count = 0;
         int num = 0;    //标记生成的文件
         try {
+            LocalFileSystem lfs = FileSystem.getLocal(conf);
+            lfs.delete(new Path(localPath), true);
+            lfs.mkdirs(new Path(localPath));
+
             FileWriter writer = new FileWriter(localPath + "/" + fileName + num);
             for (int i = 0; i < row; i++) {
                 for (int j = 0; j < col; j++) {
                     for (int k = 0; k < height; k++) {
                         count++;
                         writer.write(i + "-" + j + "-" + k + "\n");
+                        if (totalNum / fileNum == 0)
+                            throw new IOException("totalNum / fileNum 为 0 ");
                         if (count % (totalNum / fileNum) == 0) {   //将文件中所有条目分为fileNum份，放在fileNum个文件中（最后一个文件可能略大）
                             num++;
                             if (num < fileNum) {
@@ -85,6 +105,7 @@ public class CreateFiles_MR extends Configured implements Tool {
             data2cloud(localPath, hdfsPath);
         } catch (IOException e) {
             e.printStackTrace();
+            logger.error("lllllll  generateFiles() error");
         }
     }
 
@@ -100,6 +121,8 @@ public class CreateFiles_MR extends Configured implements Tool {
             FileSystem fs = FileSystem.get(URI.create(des), conf);
             FileSystem local = FileSystem.getLocal(conf);
             FileStatus[] inputFiles = local.listStatus(new Path(src));
+            fs.delete(new Path(des), true);
+            //    fs.mkdirs()
 
             for (FileStatus fileStatus : inputFiles) {
                 FSDataOutputStream out = fs.create(new Path(des + "/" + fileStatus.getPath().getName()));
@@ -113,20 +136,21 @@ public class CreateFiles_MR extends Configured implements Tool {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        logger.info("lllllll  data2cloud() over");
     }
 
     @Override
     public int run(String[] args) throws Exception {
 
         fs = FileSystem.get(URI.create(CLOUD_DEST), conf);
+        fs.delete(new Path(CLOUD_DEST), true);
         SimpleDateFormat dateFormat = new SimpleDateFormat("hh_mm_ss_SSS");
 
         Job job = new Job(getConf(), "CreateFiles");
         job.setJarByClass(getClass());
 
-        FileInputFormat.setInputPaths(job, new Path("hdfs://localhost:9000/temp"));
-        FileOutputFormat.setOutputPath(job, new Path("hdfs://localhost:9000/output" + dateFormat.format(new Date())));
-
+        FileInputFormat.setInputPaths(job, new Path(CLOUD_TEMP));
+        FileOutputFormat.setOutputPath(job, new Path(OUTPUT + dateFormat.format(new Date())));  // TODO
 
         job.setNumReduceTasks(0);   //在没有Reduce过程时必须设置！！！
 
@@ -134,19 +158,27 @@ public class CreateFiles_MR extends Configured implements Tool {
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Integer.class);
 
-
         return job.waitForCompletion(true) ? 0 : 1;
     }
 
     public static class MapperClass extends Mapper<LongWritable, Text, Text, NullWritable> {
 
+//        @Override
+//        protected void setup(Context context
+//        ) throws IOException, InterruptedException {
+//
+//        }
+
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             System.out.println(value);
             System.out.println(key);
             try (FSDataOutputStream out = fs.create(new Path(CLOUD_DEST + "/" + value.toString()))) {
-                AttrNode node = new AttrNode();
-                for (int ii = 0; ii < 200 * 200 * 33; ii++) {
-                    out.write(node.getBytes());
+                AttrNode2 node = new AttrNode2();
+                FileHead fileHead = new FileHead();
+                fileHead.write(out);
+                for (int ii = 0; ii < fileHead.getNodeCount(); ii++) {
+                    node.write(out);
+                    //    out.write(node.getBytes());
                 }
             }
             context.write(value, NullWritable.get());

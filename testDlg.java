@@ -19,6 +19,7 @@ public class testDlg extends JDialog {
     Configuration conf;
     FileSystem hdfs;
     FileSystem local;
+    String HOSTNAME = "192.168.59.128";
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -51,7 +52,12 @@ public class testDlg extends JDialog {
         updateButton.addActionListener(e -> updateTree());
 
         conf = new Configuration();
-        hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/"), conf);
+        conf.set("fs.default.name", "hdfs://192.168.59.128:9000");
+        conf.set("mapreduce.jobtracker.address", "192.168.59.128:9001");
+        conf.set("mapreduce.framework.name", "yarn");
+        conf.set("yarn.resourcemanager.hostname", "192.168.59.139");
+
+        hdfs = FileSystem.get(URI.create(HOSTNAME), conf);
         local = FileSystem.getLocal(conf);
 
         updateTree();
@@ -68,7 +74,7 @@ public class testDlg extends JDialog {
                     filePath += "/" + path1[i];
                 }
             }
-            filePath = "hdfs://localhost:9000" + filePath;
+            filePath = HOSTNAME + filePath;
 
             if (checkBox1.isSelected()) {
                 //      Configuration conf = new Configuration();
