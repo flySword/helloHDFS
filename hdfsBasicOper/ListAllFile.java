@@ -12,9 +12,9 @@ public class ListAllFile {
 
     public static void main(String[] args) throws IOException {
         Configuration conf = new Configuration();
-        FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/input/fileCreate"), conf);
+        FileSystem hdfs = FileSystem.get(URI.create("hdfs://localhost:9000/liu/Raster_3D_test"), conf);
 
-        Path listf = new Path("/");
+        Path listf = new Path("hdfs://localhost:9000/liu/Raster_3D_test");
 
         FileStatus stats[] = hdfs.listStatus(listf);
         for (int i = 0; i < stats.length; ++i) {

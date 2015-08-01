@@ -62,6 +62,11 @@ public class AttrNode2 implements Writable {
 //            attrDouble[i] = inputStream.readDouble();
     }
 
+    public AttrNode2(DataInput dataInput) throws IOException {
+        this();
+        readFields(dataInput);
+    }
+
     public byte[] getBytes() throws IOException {
         ByteArrayOutputStream aa = new ByteArrayOutputStream();
         for (byte bt : attrByte)

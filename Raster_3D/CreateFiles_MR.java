@@ -29,27 +29,46 @@ import java.util.Date;
  */
 public class CreateFiles_MR extends Configured implements Tool {
 
+    //   static String HOSTNAME = "localhost";
+    static String HOSTNAME = "192.168.59.128";
     static String LOCAL_TEMP = "/home/fly/桌面/hadoopPrj/temp";   // TODO 本地临时地址
-    static String CLOUD_TEMP = "hdfs://192.168.59.128:9000/temp";    // TODO HDFS临时地址
-    static String CLOUD_DEST = "hdfs://192.168.59.128:9000/Reaste_3D_test";  // TODO HDFS生成文件地址
-    static String OUTPUT = "hdfs://192.168.59.128:9000/output";
+    static String CLOUD_TEMP = "hdfs://" + HOSTNAME + ":9000/liu/temp";    // TODO HDFS临时地址
+    static String CLOUD_DEST = "hdfs://" + HOSTNAME + ":9000/liu/Raster_3D_test";  // TODO HDFS生成文件地址
+    static String OUTPUT = "hdfs://" + HOSTNAME + ":9000/liu/output";     // TODO HDFS 输出目录
 
-    static int nameNodeNum = 2;
-    static int row = 2;
-    static int col = 1;
+    static int nameNodeNum = 5;
+    static int row = 5;
+    static int col = 3;
     static int height = 1;
     static Configuration conf = new Configuration();
     static FileSystem fs;
     private static Logger logger = LoggerFactory.getLogger(CreateFiles_MR.class);
 
     public static void main(String[] args) {
+
+        //region 在服务器上运行时必须的设置 单机运行时取消
+
+
+        conf.addResource(new Path("/home/fly/桌面/hadoopPrj/conf1"));
+        conf.set("yarn.resourcemanager.address", "192.168.59.139:18040");
+        conf.set("yarn.resourcemanager.scheduler.address", "192.168.59.139:18030");
         conf.set("fs.default.name", "hdfs://192.168.59.128:9000");
         conf.set("mapreduce.jobtracker.address", "192.168.59.128:9001");
         conf.set("mapreduce.framework.name", "yarn");
         conf.set("yarn.resourcemanager.hostname", "192.168.59.139");
-        //调用前先清空localPath hdfsPath，未进行自动清空！！
-        generateFiles(row, col, height, LOCAL_TEMP, "aaa", nameNodeNum, CLOUD_TEMP);
-        logger.info("lllllll  generateFiles() over");
+        conf.set("ha.zookeeper.quorum", "zookeeper3:2181,zookeeper4:2181,zookeeper5:2181,zookeeper6:2181,zookeeper7:2181");
+        conf.set("mapreduce.jobhistory.address", "192.168.59.139:10020");
+        conf.set("mapreduce.jobhistory.admin.address", "0.0.0.0:10033");
+
+        conf.set("mapred.jar", "/home/fly/workspace/helloIntellij/out/artifacts/helloIntellij_jar/helloIntellij_jar.jar");
+        //endregion
+
+
+        if (!generateFiles(row, col, height, LOCAL_TEMP, "aaa", nameNodeNum, CLOUD_TEMP)) {
+            System.exit(2);
+        } else
+            logger.info("liu:::    generateFiles() succeed");
+
         int exitCode = 0;
         try {
             exitCode = ToolRunner.run(new CreateFiles_MR(), args);
@@ -73,7 +92,7 @@ public class CreateFiles_MR extends Configured implements Tool {
      * @param fileNum   生成文件的数目
      * @param hdfsPath  在hdfs中的路径
      */
-    public static void generateFiles(int row, int col, int height, String localPath, String fileName, int fileNum, String hdfsPath) {
+    public static boolean generateFiles(int row, int col, int height, String localPath, String fileName, int fileNum, String hdfsPath) {
         int totalNum = row * col * height;
         int count = 0;
         int num = 0;    //标记生成的文件
@@ -102,10 +121,13 @@ public class CreateFiles_MR extends Configured implements Tool {
             }
             writer.close();
 
-            data2cloud(localPath, hdfsPath);
+            if (!data2cloud(localPath, hdfsPath))
+                throw new IOException("data2cloud error");
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
-            logger.error("lllllll  generateFiles() error");
+            logger.error("liu:::    generateFiles() error");
+            return false;
         }
     }
 
@@ -115,8 +137,7 @@ public class CreateFiles_MR extends Configured implements Tool {
      * @param src 本地文件夹
      * @param des HDFS文件夹
      */
-    static void data2cloud(String src, String des) {
-        Configuration conf = new Configuration();
+    static boolean data2cloud(String src, String des) {
         try {
             FileSystem fs = FileSystem.get(URI.create(des), conf);
             FileSystem local = FileSystem.getLocal(conf);
@@ -133,10 +154,13 @@ public class CreateFiles_MR extends Configured implements Tool {
             }
             fs.close();
             local.close();
+            logger.info("liu:::    data2cloud() finished");
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
-        logger.info("lllllll  data2cloud() over");
+
     }
 
     @Override
@@ -146,9 +170,9 @@ public class CreateFiles_MR extends Configured implements Tool {
         fs.delete(new Path(CLOUD_DEST), true);
         SimpleDateFormat dateFormat = new SimpleDateFormat("hh_mm_ss_SSS");
 
-        Job job = new Job(getConf(), "CreateFiles");
-        job.setJarByClass(getClass());
-
+        Job job = new Job(conf, "CreateFiles");
+        job.setJarByClass(CreateFiles_MR.class);
+        getClass();
         FileInputFormat.setInputPaths(job, new Path(CLOUD_TEMP));
         FileOutputFormat.setOutputPath(job, new Path(OUTPUT + dateFormat.format(new Date())));  // TODO
 
@@ -159,6 +183,7 @@ public class CreateFiles_MR extends Configured implements Tool {
         job.setMapOutputValueClass(Integer.class);
 
         return job.waitForCompletion(true) ? 0 : 1;
+
     }
 
     public static class MapperClass extends Mapper<LongWritable, Text, Text, NullWritable> {
@@ -170,16 +195,22 @@ public class CreateFiles_MR extends Configured implements Tool {
 //        }
 
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            System.out.println(value);
-            System.out.println(key);
-            try (FSDataOutputStream out = fs.create(new Path(CLOUD_DEST + "/" + value.toString()))) {
+
+            FileSystem fss = FileSystem.get(URI.create(CLOUD_DEST), context.getConfiguration());
+            try (FSDataOutputStream out = fss.create(new Path(CLOUD_DEST + "/" + value.toString()))) {
+                String[] nums = value.toString().split("-");
+
+                int fileRow = Integer.valueOf(nums[0]);
+                int fileCol = Integer.valueOf(nums[1]);
+                int fileHeight = Integer.valueOf(nums[2]);
+
                 AttrNode2 node = new AttrNode2();
-                FileHead fileHead = new FileHead();
+                FileHead fileHead = new FileHead(fileRow, fileCol, fileHeight);
                 fileHead.write(out);
                 for (int ii = 0; ii < fileHead.getNodeCount(); ii++) {
                     node.write(out);
-                    //    out.write(node.getBytes());
                 }
+
             }
             context.write(value, NullWritable.get());
 

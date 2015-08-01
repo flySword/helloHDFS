@@ -52,10 +52,10 @@ public class testDlg extends JDialog {
         updateButton.addActionListener(e -> updateTree());
 
         conf = new Configuration();
-        conf.set("fs.default.name", "hdfs://192.168.59.128:9000");
-        conf.set("mapreduce.jobtracker.address", "192.168.59.128:9001");
-        conf.set("mapreduce.framework.name", "yarn");
-        conf.set("yarn.resourcemanager.hostname", "192.168.59.139");
+//        conf.set("fs.default.name", "hdfs://192.168.59.128:9000");
+//        conf.set("mapreduce.jobtracker.address", "192.168.59.128:9001");
+//        conf.set("mapreduce.framework.name", "yarn");
+//        conf.set("yarn.resourcemanager.hostname", "192.168.59.139");
 
         hdfs = FileSystem.get(URI.create(HOSTNAME), conf);
         local = FileSystem.getLocal(conf);
