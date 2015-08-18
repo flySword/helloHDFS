@@ -33,5 +33,5 @@ Class-Path: xz-1.0.jar asm-3.2.jar avro-1.7.4.jar junit-4.11.jar jsch-
  2.5.2.jar hadoop-mapreduce-client-hs-plugins-2.5.2.jar hadoop-mapredu
  ce-client-jobclient-2.5.2-tests.jar hadoop-hdfs-2.5.2.jar hadoop-hdfs
  -nfs-2.5.2.jar hadoop-hdfs-2.5.2-tests.jar
-Main-Class: testDlg
+Main-Class: CreateFiles_MR2
 

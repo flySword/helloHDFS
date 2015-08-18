@@ -80,7 +80,7 @@ public class FileHead {
         return row * col * height;
     }
 
-    void write(DataOutputStream dataOutputStream) throws IOException {
+    public void write(DataOutputStream dataOutputStream) throws IOException {
         dataOutputStream.writeInt(headLength);
         dataOutputStream.writeInt(row);
         dataOutputStream.writeInt(col);
@@ -92,7 +92,7 @@ public class FileHead {
 
     }
 
-    void read(DataInputStream dataInputStream) throws IOException {
+    public void read(DataInputStream dataInputStream) throws IOException {
         headLength = dataInputStream.readInt();
         row = dataInputStream.readInt();
         col = dataInputStream.readInt();

@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 
 /**
+ *
  * Created by fly on 15-7-13.
  */
 public class MapReduceExperiment {
@@ -42,7 +43,7 @@ public class MapReduceExperiment {
     public static class MapperClass extends Mapper<Object, Text, Text, IntWritable> {
 
         @Override
-        protected void setup(Mapper.Context context) throws IOException, InterruptedException {
+        protected void setup(Context context) throws IOException, InterruptedException {
         }
 
         @Override

@@ -33,7 +33,8 @@ public class ReadAndChangeFile extends Configured implements Tool {
     static SimpleDateFormat dateFormat = new SimpleDateFormat("hh_mm_ss_SSS");
     static FileSystem fileSystem;
 
-    static String HOSTNAME = "192.168.59.128"; //"localhost";
+    //  static String HOSTNAME = "192.168.59.128";
+    static String HOSTNAME = "localhost";
     static String CLOUD_DATA_PATH = "hdfs://" + HOSTNAME + ":9000/liu/Raster_3D_test";
     static String MR_OUTPUT = "hdfs://" + HOSTNAME + ":9000/liu/output";
     static Configuration conf;
@@ -42,30 +43,50 @@ public class ReadAndChangeFile extends Configured implements Tool {
     public static void main(String[] args) {
         conf = new Configuration();
 
-        //region 在服务器上运行时必须的设置 单机运行时取消
-        //    conf.addResource(new Path("/home/fly/桌面/hadoopPrj/conf2"));
-        conf.set("yarn.resourcemanager.address", "192.168.59.139:18040");
-        conf.set("yarn.resourcemanager.scheduler.address", "192.168.59.139:18030");
-        conf.set("fs.default.name", "hdfs://192.168.59.128:9000");
-        conf.set("mapreduce.jobtracker.address", "192.168.59.128:9001");
+
+        //region 单机伪分布运行
+        conf.set("yarn.resourcemanager.address", "localhost:8032");
+        conf.set("yarn.resourcemanager.scheduler.address", "localhost:8030");
+        conf.set("fs.defaultFS", "hdfs://localhost:9000");
+        conf.set("mapreduce.jobtracker.address", "localhost:9001");
         conf.set("mapreduce.framework.name", "yarn");
-        conf.set("yarn.resourcemanager.hostname", "192.168.59.139");
-        conf.set("ha.zookeeper.quorum", "zookeeper3:2181,zookeeper4:2181,zookeeper5:2181,zookeeper6:2181,zookeeper7:2181");
+        conf.set("yarn.resourcemanager.hostname", "localhost");
+        //    conf.set("ha.zookeeper.quorum", "zookeeper3:2181,zookeeper4:2181,zookeeper5:2181,zookeeper6:2181,zookeeper7:2181");
+        conf.set("mapreduce.jobhistory.address", "0.0.0.0:10020");
+        conf.set("mapreduce.jobhistory.admin.address", "0.0.0.0:10033");
+        conf.set("mapreduce.job.jar", "/home/fly/workspace/helloIntellij/out/artifacts/jobsubmit/jobsubmit.jar");
+        //endregion
 
+        //region 在服务器上运行时必须的设置 单机运行时取消
+//        conf.set("yarn.resourcemanager.address", "192.168.59.139:18040");
+//        conf.set("yarn.resourcemanager.scheduler.address", "192.168.59.139:18030");
+//        conf.set("fs.default.name", "hdfs://192.168.59.128:9000");
+//        conf.set("mapreduce.jobtracker.address", "192.168.59.128:9001");
+//        conf.set("mapreduce.framework.name", "yarn");
+//        conf.set("yarn.resourcemanager.hostname", "192.168.59.139");
+//        conf.set("ha.zookeeper.quorum", "zookeeper3:2181,zookeeper4:2181,zookeeper5:2181,zookeeper6:2181,zookeeper7:2181");
+//        conf.set("mapreduce.jobhistory.address", "192.168.59.139:10020");
+//        conf.set("mapreduce.jobhistory.admin.address", "0.0.0.0:10033");
+        //endregion
 
-        conf.set("yarn.resourcemanager.resource-tracker.address", "192.168.59.139:8025");
-
-
-        conf.set("yarn.resourcemanager.admin.address", "192.168.59.139:8033");
-        conf.set("yarn.application.classpath", "$HADOOP_CONF_DIR,"
-                + "$HADOOP_COMMON_HOME/*,$HADOOP_COMMON_HOME/lib/*,"
-                + "$HADOOP_HDFS_HOME/*,$HADOOP_HDFS_HOME/lib/*,"
-                + "$HADOOP_MAPRED_HOME/*,$HADOOP_MAPRED_HOME/lib/*,"
-                + "$YARN_HOME/*,$YARN_HOME/lib/*,"
-                + "$HBASE_HOME/*,$HBASE_HOME/lib/*,$HBASE_HOME/conf/*");
-        conf.set("mapreduce.jobhistory.address", "192.168.59.132:10020");
-        conf.set("mapreduce.jobhistory.webapp.address", "192.168.59.132:19888");
-        conf.set("mapred.child.java.opts", "-Xmx1024m");
+        //region error ! only to refer
+        //    conf.addResource(new Path("/home/fly/桌面/hadoopPrj/conf2"));
+//        conf.set("yarn.resourcemanager.address", "192.168.59.139:18040");
+//        conf.set("yarn.resourcemanager.scheduler.address", "192.168.59.139:18030");
+//        conf.set("fs.default.name", "hdfs://192.168.59.128:9000");
+//        conf.set("mapreduce.jobtracker.address", "192.168.59.128:9001");
+//        conf.set("mapreduce.framework.name", "yarn");
+//        conf.set("yarn.resourcemanager.hostname", "192.168.59.139");
+//        conf.set("ha.zookeeper.quorum", "zookeeper3:2181,zookeeper4:2181,zookeeper5:2181,zookeeper6:2181,zookeeper7:2181");
+//
+//
+//        conf.set("yarn.resourcemanager.resource-tracker.address", "192.168.59.139:8025");
+//
+//
+//        conf.set("yarn.resourcemanager.admin.address", "192.168.59.139:8033");
+//        conf.set("mapreduce.jobhistory.address", "192.168.59.132:10020");
+//        conf.set("mapreduce.jobhistory.webapp.address", "192.168.59.132:19888");
+//        conf.set("mapred.child.java.opts", "-Xmx1024m");
         //endregion
 
         try {

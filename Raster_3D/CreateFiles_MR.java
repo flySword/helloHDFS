@@ -23,8 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * 首先根据行列数与高度将文件名存入文件，文件个数与nameNode一直，然后通过MapReduce读取文件，
- * 通过MapReduce读
+ * 首先根据行列数与高度将文件名存入文件，文件个数与nameNode一直，然后通过MapReduce读取文件后创建相应的文件
+ * 存文件名的文件首先创建在本地,然后传入hdfs中
  * Created by fly on 15-7-27.
  */
 public class CreateFiles_MR extends Configured implements Tool {
